@@ -31,8 +31,8 @@ import (
 	"net/url"
 
 	"github.com/gorilla/schema"
-	"github.com/loadimpact/k6/output"
-	"github.com/loadimpact/k6/stats"
+	"go.k6.io/k6/output"
+	"go.k6.io/k6/stats"
 	"github.com/prometheus/client_golang/prometheus"
 	"github.com/prometheus/client_golang/prometheus/promhttp"
 )

@@ -4,7 +4,7 @@ A k6 extension implements Prometheus HTTP exporter as k6 output extension.
 
 Using **xk6-prometheus** output extension you can collect metrics from long running k6 process with Prometheus. All custom k6 metrics ([Counter](https://k6.io/docs/javascript-api/k6-metrics/counter/),[Gauge](https://k6.io/docs/javascript-api/k6-metrics/gauge/),[Rate](https://k6.io/docs/javascript-api/k6-metrics/rate/),[Trend](https://k6.io/docs/javascript-api/k6-metrics/trend/)) and [build-in metrics](https://k6.io/docs/using-k6/metrics/#built-in-metrics) will be accessible as appropiate Prometheus metrics on a given HTTP port in Prometheus importable text format. 
 
-Built for [k6](https://github.com/loadimpact/k6) using [xk6](https://github.com/k6io/xk6).
+Built for [k6](https://go.k6.io/k6) using [xk6](https://github.com/k6io/xk6).
 
 ## Build
 
@@ -17,12 +17,12 @@ Then:
 
 1. Download `xk6`:
   ```bash
-  $ go get -u github.com/k6io/xk6
+  $ go install github.com/k6io/xk6/cmd/xk6@latest
   ```
 
 2. Build the binary:
   ```bash
-  $ xk6 build v0.31.1 --with github.com/szkiba/xk6-prometheus
+  $ xk6 build --with github.com/szkiba/xk6-prometheus@latest
   ```
 
 > You should use at least `v0.31.0` version because xk6-prometheus extension registers itself as output extension. This feature introduced in the `v0.31.0` version of k6.
