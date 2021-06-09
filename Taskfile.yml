@@ -48,4 +48,4 @@ tasks:
   test:
     deps: [build]
     cmds:
-      - ./k6 run --out prometheus -d 1m --no-usage-report script.js
+      - ./k6 run --out prometheus=namespace=k6 -d 1m --no-usage-report script.js

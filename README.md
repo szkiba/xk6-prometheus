@@ -50,23 +50,23 @@ $ ./k6 run -d 1m --out prometheus script.js
            * default: 1 looping VUs for 1m0s (gracefulStop: 30s)
 
 
-running (1m00.8s), 0/1 VUs, 54 complete and 0 interrupted iterations
+running (1m01.0s), 0/1 VUs, 54 complete and 0 interrupted iterations
 default ✓ [======================================] 1 VUs  1m0s
 
      data_received..................: 611 kB 10 kB/s
      data_sent......................: 4.1 kB 67 B/s
-     http_req_blocked...............: avg=2.55ms   min=4.05µs   med=8.92µs   max=137.67ms p(90)=12.7µs   p(95)=13.15µs 
-     http_req_connecting............: avg=2.19ms   min=0s       med=0s       max=118.73ms p(90)=0s       p(95)=0s      
-     http_req_duration..............: avg=122.13ms min=119.31ms med=121.19ms max=139.75ms p(90)=123.43ms p(95)=126.27ms
-       { expected_response:true }...: avg=122.13ms min=119.31ms med=121.19ms max=139.75ms p(90)=123.43ms p(95)=126.27ms
+     http_req_blocked...............: avg=3.37ms   min=2.86µs   med=3.82µs   max=181.96ms p(90)=11.15µs  p(95)=13.52µs 
+     http_req_connecting............: avg=2.19ms   min=0s       med=0s       max=118.34ms p(90)=0s       p(95)=0s      
+     http_req_duration..............: avg=125.14ms min=118.99ms med=120.68ms max=237.66ms p(90)=121.45ms p(95)=124.07ms
+       { expected_response:true }...: avg=125.14ms min=118.99ms med=120.68ms max=237.66ms p(90)=121.45ms p(95)=124.07ms
      http_req_failed................: 0.00%  ✓ 0   ✗ 54 
-     http_req_receiving.............: avg=839.36µs min=610.96µs med=789.06µs max=3.89ms   p(90)=847.57µs p(95)=881.74µs
-     http_req_sending...............: avg=46.16µs  min=14.5µs   med=40.56µs  max=177.74µs p(90)=60.48µs  p(95)=66.41µs 
+     http_req_receiving.............: avg=5.1ms    min=85.32µs  med=792.2µs  max=118.29ms p(90)=860.41µs p(95)=903.71µs
+     http_req_sending...............: avg=20.68µs  min=12.53µs  med=16.69µs  max=75.97µs  p(90)=29.39µs  p(95)=37.87µs 
      http_req_tls_handshaking.......: avg=0s       min=0s       med=0s       max=0s       p(90)=0s       p(95)=0s      
-     http_req_waiting...............: avg=121.24ms min=118.48ms med=120.31ms max=137.43ms p(90)=122.64ms p(95)=125.43ms
-     http_reqs......................: 54     0.888369/s
-     iteration_duration.............: avg=1.12s    min=1.11s    med=1.12s    max=1.25s    p(90)=1.12s    p(95)=1.13s   
-     iterations.....................: 54     0.888369/s
+     http_req_waiting...............: avg=120.01ms min=118.17ms med=119.78ms max=127.48ms p(90)=120.6ms  p(95)=120.71ms
+     http_reqs......................: 54     0.885451/s
+     iteration_duration.............: avg=1.12s    min=1.11s    med=1.12s    max=1.3s     p(90)=1.12s    p(95)=1.16s   
+     iterations.....................: 54     0.885451/s
      vus............................: 1      min=1 max=1
      vus_max........................: 1      min=1 max=1
 ```
@@ -99,102 +99,110 @@ Here is the relevant part of the metrics HTTP response:
 ```plain
 # HELP k6_data_received The amount of received data
 # TYPE k6_data_received counter
-k6_data_received 588452
+k6_data_received 600077
 # HELP k6_data_sent The amount of data sent
 # TYPE k6_data_sent counter
-k6_data_sent 3952
+k6_data_sent 4028
 # HELP k6_http_req_blocked Time spent blocked  before initiating the request
 # TYPE k6_http_req_blocked summary
-k6_http_req_blocked{quantile="0.5"} 0.008816
-k6_http_req_blocked{quantile="0.9"} 0.012707
-k6_http_req_blocked{quantile="0.95"} 0.012851
-k6_http_req_blocked_sum 138.14527600000005
-k6_http_req_blocked_count 52
-# HELP k6_http_req_blocked_value Time spent blocked  before initiating the request (value)
-# TYPE k6_http_req_blocked_value gauge
-k6_http_req_blocked_value 0.009559
+k6_http_req_blocked{quantile="0.5"} 0.003785
+k6_http_req_blocked{quantile="0.9"} 0.011186
+k6_http_req_blocked{quantile="0.95"} 0.014801
+k6_http_req_blocked{quantile="1"} 181.961168
+k6_http_req_blocked_sum 182.2282190000001
+k6_http_req_blocked_count 54
+# HELP k6_http_req_blocked_current Time spent blocked  before initiating the request (current)
+# TYPE k6_http_req_blocked_current gauge
+k6_http_req_blocked_current 0.004652
 # HELP k6_http_req_connecting Time spent establishing TCP connection
 # TYPE k6_http_req_connecting summary
 k6_http_req_connecting{quantile="0.5"} 0
 k6_http_req_connecting{quantile="0.9"} 0
 k6_http_req_connecting{quantile="0.95"} 0
-k6_http_req_connecting_sum 118.737106
-k6_http_req_connecting_count 52
-# HELP k6_http_req_connecting_value Time spent establishing TCP connection (value)
-# TYPE k6_http_req_connecting_value gauge
-k6_http_req_connecting_value 0
+k6_http_req_connecting{quantile="1"} 118.345391
+k6_http_req_connecting_sum 118.345391
+k6_http_req_connecting_count 54
+# HELP k6_http_req_connecting_current Time spent establishing TCP connection (current)
+# TYPE k6_http_req_connecting_current gauge
+k6_http_req_connecting_current 0
 # HELP k6_http_req_duration Total time for the request
 # TYPE k6_http_req_duration summary
-k6_http_req_duration{quantile="0.5"} 121.216566
-k6_http_req_duration{quantile="0.9"} 123.535732
-k6_http_req_duration{quantile="0.95"} 127.755531
-k6_http_req_duration_sum 6354.830187
-k6_http_req_duration_count 52
-# HELP k6_http_req_duration_value Total time for the request (value)
-# TYPE k6_http_req_duration_value gauge
-k6_http_req_duration_value 120.766806
+k6_http_req_duration{quantile="0.5"} 120.68482
+k6_http_req_duration{quantile="0.9"} 121.461453
+k6_http_req_duration{quantile="0.95"} 128.291489
+k6_http_req_duration{quantile="1"} 237.666802
+k6_http_req_duration_sum 6757.691293999998
+k6_http_req_duration_count 54
+# HELP k6_http_req_duration_current Total time for the request (current)
+# TYPE k6_http_req_duration_current gauge
+k6_http_req_duration_current 120.751952
 # HELP k6_http_req_failed The rate of failed requests
 # TYPE k6_http_req_failed histogram
-k6_http_req_failed_bucket{le="0"} 52
-k6_http_req_failed_bucket{le="+Inf"} 52
+k6_http_req_failed_bucket{le="0"} 54
+k6_http_req_failed_bucket{le="+Inf"} 54
 k6_http_req_failed_sum 0
-k6_http_req_failed_count 52
+k6_http_req_failed_count 54
 # HELP k6_http_req_receiving Time spent receiving response data
 # TYPE k6_http_req_receiving summary
-k6_http_req_receiving{quantile="0.5"} 0.787394
-k6_http_req_receiving{quantile="0.9"} 0.847776
-k6_http_req_receiving{quantile="0.95"} 0.882193
-k6_http_req_receiving_sum 43.79441599999999
-k6_http_req_receiving_count 52
-# HELP k6_http_req_receiving_value Time spent receiving response data (value)
-# TYPE k6_http_req_receiving_value gauge
-k6_http_req_receiving_value 0.725954
+k6_http_req_receiving{quantile="0.5"} 0.79092
+k6_http_req_receiving{quantile="0.9"} 0.862976
+k6_http_req_receiving{quantile="0.95"} 0.973895
+k6_http_req_receiving{quantile="1"} 118.292546
+k6_http_req_receiving_sum 275.923961
+k6_http_req_receiving_count 54
+# HELP k6_http_req_receiving_current Time spent receiving response data (current)
+# TYPE k6_http_req_receiving_current gauge
+k6_http_req_receiving_current 0.706994
 # HELP k6_http_req_sending Time spent sending data
 # TYPE k6_http_req_sending summary
-k6_http_req_sending{quantile="0.5"} 0.040285
-k6_http_req_sending{quantile="0.9"} 0.060527
-k6_http_req_sending{quantile="0.95"} 0.067514
-k6_http_req_sending_sum 2.394856
-k6_http_req_sending_count 52
-# HELP k6_http_req_sending_value Time spent sending data (value)
-# TYPE k6_http_req_sending_value gauge
-k6_http_req_sending_value 0.040846
+k6_http_req_sending{quantile="0.5"} 0.016638
+k6_http_req_sending{quantile="0.9"} 0.030783
+k6_http_req_sending{quantile="0.95"} 0.041126
+k6_http_req_sending{quantile="1"} 0.07597
+k6_http_req_sending_sum 1.11689
+k6_http_req_sending_count 54
+# HELP k6_http_req_sending_current Time spent sending data (current)
+# TYPE k6_http_req_sending_current gauge
+k6_http_req_sending_current 0.018325
 # HELP k6_http_req_tls_handshaking Time spent handshaking TLS session
 # TYPE k6_http_req_tls_handshaking summary
 k6_http_req_tls_handshaking{quantile="0.5"} 0
 k6_http_req_tls_handshaking{quantile="0.9"} 0
 k6_http_req_tls_handshaking{quantile="0.95"} 0
+k6_http_req_tls_handshaking{quantile="1"} 0
 k6_http_req_tls_handshaking_sum 0
-k6_http_req_tls_handshaking_count 52
-# HELP k6_http_req_tls_handshaking_value Time spent handshaking TLS session (value)
-# TYPE k6_http_req_tls_handshaking_value gauge
-k6_http_req_tls_handshaking_value 0
+k6_http_req_tls_handshaking_count 54
+# HELP k6_http_req_tls_handshaking_current Time spent handshaking TLS session (current)
+# TYPE k6_http_req_tls_handshaking_current gauge
+k6_http_req_tls_handshaking_current 0
 # HELP k6_http_req_waiting Time spent waiting for response
 # TYPE k6_http_req_waiting summary
-k6_http_req_waiting{quantile="0.5"} 120.329931
-k6_http_req_waiting{quantile="0.9"} 122.741878
-k6_http_req_waiting{quantile="0.95"} 126.89048
-k6_http_req_waiting_sum 6308.640915000001
-k6_http_req_waiting_count 52
-# HELP k6_http_req_waiting_value Time spent waiting for response (value)
-# TYPE k6_http_req_waiting_value gauge
-k6_http_req_waiting_value 120.000006
+k6_http_req_waiting{quantile="0.5"} 119.771619
+k6_http_req_waiting{quantile="0.9"} 120.604942
+k6_http_req_waiting{quantile="0.95"} 120.858167
+k6_http_req_waiting{quantile="1"} 127.48803
+k6_http_req_waiting_sum 6480.650443
+k6_http_req_waiting_count 54
+# HELP k6_http_req_waiting_current Time spent waiting for response (current)
+# TYPE k6_http_req_waiting_current gauge
+k6_http_req_waiting_current 120.026633
 # HELP k6_http_reqs How many HTTP requests has k6 generated, in total
 # TYPE k6_http_reqs counter
-k6_http_reqs 52
+k6_http_reqs 54
 # HELP k6_iteration_duration The time it took to complete one full iteration
 # TYPE k6_iteration_duration summary
-k6_iteration_duration{quantile="0.5"} 1122.287172
-k6_iteration_duration{quantile="0.9"} 1125.321538
-k6_iteration_duration{quantile="0.95"} 1139.260684
-k6_iteration_duration_sum 58539.15245099999
-k6_iteration_duration_count 52
-# HELP k6_iteration_duration_value The time it took to complete one full iteration (value)
-# TYPE k6_iteration_duration_value gauge
-k6_iteration_duration_value 1121.81436
+k6_iteration_duration{quantile="0.5"} 1121.458258
+k6_iteration_duration{quantile="0.9"} 1122.620529
+k6_iteration_duration{quantile="0.95"} 1237.23951
+k6_iteration_duration{quantile="1"} 1304.729788
+k6_iteration_duration_sum 59861.31288699999
+k6_iteration_duration_count 53
+# HELP k6_iteration_duration_current The time it took to complete one full iteration (current)
+# TYPE k6_iteration_duration_current gauge
+k6_iteration_duration_current 1121.360347
 # HELP k6_iterations The aggregate number of times the VUs in the test have executed
 # TYPE k6_iterations counter
-k6_iterations 52
+k6_iterations 53
 # HELP k6_vus Current number of active virtual users
 # TYPE k6_vus gauge
 k6_vus 1
