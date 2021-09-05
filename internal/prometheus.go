@@ -40,6 +40,28 @@ type PrometheusAdapter struct {
 	registry  *prometheus.Registry
 }
 
+type labelNames []string
+
+type counterWithLabels struct {
+	counterVec *prometheus.CounterVec
+	labelNames labelNames
+}
+
+type gaugeWithLabels struct {
+	gaugeVec   *prometheus.GaugeVec
+	labelNames labelNames
+}
+
+type summaryWithLabels struct {
+	summaryVec *prometheus.SummaryVec
+	labelNames labelNames
+}
+
+type histogramWithLabels struct {
+	histogramVec *prometheus.HistogramVec
+	labelNames   labelNames
+}
+
 func NewPrometheusAdapter(registry *prometheus.Registry, logger logrus.FieldLogger, ns, sub string) *PrometheusAdapter {
 	return &PrometheusAdapter{
 		Subsystem: sub,
@@ -84,50 +106,108 @@ func (a *PrometheusAdapter) handleSample(sample *stats.Sample) {
 	handler(sample)
 }
 
+func (a *PrometheusAdapter) tagsToLabelNames(tags *stats.SampleTags) []string {
+	m := tags.CloneTags()
+	keys := make([]string, 0, len(m))
+	for key := range m {
+		keys = append(keys, key)
+	}
+	return keys
+}
+
+func (a *PrometheusAdapter) tagsToLabelValues(labelNames []string, sampleTags *stats.SampleTags) []string {
+	tags := sampleTags.CloneTags()
+	labelValues := []string{}
+	for _, label := range labelNames {
+		labelValues = append(labelValues, tags[label])
+		delete(tags, label)
+	}
+	if len(tags) > 0 {
+		a.logger.WithField("unused_tags", tags).Warn("Not all tags used as labels")
+	}
+	return labelValues
+}
+
 func (a *PrometheusAdapter) handleCounter(sample *stats.Sample) {
-	if counter := a.getCounter(sample.Metric.Name, "k6 counter"); counter != nil {
-		counter.Add(sample.Value)
+	if counter := a.getCounter(sample.Metric.Name, "k6 counter", sample.Tags); counter != nil {
+		labelValues := a.tagsToLabelValues(counter.labelNames, sample.Tags)
+		metric, err := counter.counterVec.GetMetricWithLabelValues(labelValues...)
+		if err != nil {
+			a.logger.Error(err)
+		} else {
+			metric.Add(sample.Value)
+		}
 	}
 }
 
 func (a *PrometheusAdapter) handleGauge(sample *stats.Sample) {
-	if gauge := a.getGauge(sample.Metric.Name, "k6 gauge"); gauge != nil {
-		gauge.Set(sample.Value)
+	if gauge := a.getGauge(sample.Metric.Name, "k6 gauge", sample.Tags); gauge != nil {
+		labelValues := a.tagsToLabelValues(gauge.labelNames, sample.Tags)
+		metric, err := gauge.gaugeVec.GetMetricWithLabelValues(labelValues...)
+		if err != nil {
+			a.logger.Error(err)
+		} else {
+			metric.Set(sample.Value)
+		}
 	}
 }
 
 func (a *PrometheusAdapter) handleRate(sample *stats.Sample) {
-	if histogram := a.getHistogram(sample.Metric.Name, "k6 rate", []float64{0}); histogram != nil {
-		histogram.Observe(sample.Value)
+	if histogram := a.getHistogram(sample.Metric.Name, "k6 rate", []float64{0}, sample.Tags); histogram != nil {
+		labelValues := a.tagsToLabelValues(histogram.labelNames, sample.Tags)
+		metric, err := histogram.histogramVec.GetMetricWithLabelValues(labelValues...)
+		if err != nil {
+			a.logger.Error(err)
+		} else {
+			metric.Observe(sample.Value)
+		}
 	}
 }
 
 func (a *PrometheusAdapter) handleTrend(sample *stats.Sample) {
-	if summary := a.getSummary(sample.Metric.Name, "k6 trend"); summary != nil {
-		summary.Observe(sample.Value)
+	if summary := a.getSummary(sample.Metric.Name, "k6 trend", sample.Tags); summary != nil {
+		labelValues := a.tagsToLabelValues(summary.labelNames, sample.Tags)
+		metric, err := summary.summaryVec.GetMetricWithLabelValues(labelValues...)
+		if err != nil {
+			a.logger.Error(err)
+		} else {
+			metric.Observe(sample.Value)
+		}
 	}
 
-	if gauge := a.getGauge(sample.Metric.Name+"_current", "k6 trend (current)"); gauge != nil {
-		gauge.Set(sample.Value)
+	if gauge := a.getGauge(sample.Metric.Name+"_current", "k6 trend (current)", sample.Tags); gauge != nil {
+		labelValues := a.tagsToLabelValues(gauge.labelNames, sample.Tags)
+		metric, err := gauge.gaugeVec.GetMetricWithLabelValues(labelValues...)
+		if err != nil {
+			a.logger.Error(err)
+		} else {
+			metric.Set(sample.Value)
+		}
 	}
 }
 
-func (a *PrometheusAdapter) getCounter(name string, helpSuffix string) (counter prometheus.Counter) {
+func (a *PrometheusAdapter) getCounter(name string, helpSuffix string, tags *stats.SampleTags) (counter *counterWithLabels) {
 	if col, ok := a.metrics[name]; ok {
-		if c, tok := col.(prometheus.Counter); tok {
+		if c, tok := col.(*counterWithLabels); tok {
 			counter = c
+		} else {
+			a.logger.Warn("Wrong metric type found")
 		}
 	}
 
 	if counter == nil {
-		counter = prometheus.NewCounter(prometheus.CounterOpts{ // nolint:exhaustivestruct
-			Namespace: a.Namespace,
-			Subsystem: a.Subsystem,
-			Name:      name,
-			Help:      helpFor(name, helpSuffix),
-		})
+		labelNames := a.tagsToLabelNames(tags)
+		counter = &counterWithLabels{
+			counterVec: prometheus.NewCounterVec(prometheus.CounterOpts{ // nolint:exhaustivestruct
+				Namespace: a.Namespace,
+				Subsystem: a.Subsystem,
+				Name:      name,
+				Help:      helpFor(name, helpSuffix),
+			}, labelNames),
+			labelNames: labelNames,
+		}
 
-		if err := a.registry.Register(counter); err != nil {
+		if err := a.registry.Register(counter.counterVec); err != nil {
 			a.logger.Error(err)
 
 			return nil
@@ -139,22 +219,28 @@ func (a *PrometheusAdapter) getCounter(name string, helpSuffix string) (counter 
 	return counter
 }
 
-func (a *PrometheusAdapter) getGauge(name string, helpSuffix string) (gauge prometheus.Gauge) {
+func (a *PrometheusAdapter) getGauge(name string, helpSuffix string, tags *stats.SampleTags) (gauge *gaugeWithLabels) {
 	if gau, ok := a.metrics[name]; ok {
-		if g, tok := gau.(prometheus.Gauge); tok {
+		if g, tok := gau.(*gaugeWithLabels); tok {
 			gauge = g
+		} else {
+			a.logger.Warn("Wrong metric type found")
 		}
 	}
 
 	if gauge == nil {
-		gauge = prometheus.NewGauge(prometheus.GaugeOpts{ // nolint:exhaustivestruct
-			Namespace: a.Namespace,
-			Subsystem: a.Subsystem,
-			Name:      name,
-			Help:      helpFor(name, helpSuffix),
-		})
+		labelNames := a.tagsToLabelNames(tags)
+		gauge = &gaugeWithLabels{
+			gaugeVec: prometheus.NewGaugeVec(prometheus.GaugeOpts{ // nolint:exhaustivestruct
+				Namespace: a.Namespace,
+				Subsystem: a.Subsystem,
+				Name:      name,
+				Help:      helpFor(name, helpSuffix),
+			}, labelNames),
+			labelNames: labelNames,
+		}
 
-		if err := a.registry.Register(gauge); err != nil {
+		if err := a.registry.Register(gauge.gaugeVec); err != nil {
 			a.logger.Error(err)
 
 			return nil
@@ -166,23 +252,29 @@ func (a *PrometheusAdapter) getGauge(name string, helpSuffix string) (gauge prom
 	return gauge
 }
 
-func (a *PrometheusAdapter) getSummary(name string, helpSuffix string) (summary prometheus.Summary) {
+func (a *PrometheusAdapter) getSummary(name string, helpSuffix string, tags *stats.SampleTags) (summary *summaryWithLabels) {
 	if sum, ok := a.metrics[name]; ok {
-		if s, tok := sum.(prometheus.Summary); tok {
+		if s, tok := sum.(*summaryWithLabels); tok {
 			summary = s
+		} else {
+			a.logger.Warn("Wrong metric type found")
 		}
 	}
 
 	if summary == nil {
-		summary = prometheus.NewSummary(prometheus.SummaryOpts{ // nolint:exhaustivestruct
-			Namespace:  a.Namespace,
-			Subsystem:  a.Subsystem,
-			Name:       name,
-			Help:       helpFor(name, helpSuffix),
-			Objectives: map[float64]float64{0.5: 0.05, 0.9: 0.01, 0.95: 0.001, 1: 0}, // nolint:gomnd
-		})
+		labelNames := a.tagsToLabelNames(tags)
+		summary = &summaryWithLabels{
+			summaryVec: prometheus.NewSummaryVec(prometheus.SummaryOpts{ // nolint:exhaustivestruct
+				Namespace:  a.Namespace,
+				Subsystem:  a.Subsystem,
+				Name:       name,
+				Help:       helpFor(name, helpSuffix),
+				Objectives: map[float64]float64{0.5: 0.05, 0.9: 0.01, 0.95: 0.001, 1: 0}, // nolint:gomnd
+			}, labelNames),
+			labelNames: labelNames,
+		}
 
-		if err := a.registry.Register(summary); err != nil {
+		if err := a.registry.Register(summary.summaryVec); err != nil {
 			a.logger.Error(err)
 
 			return nil
@@ -194,23 +286,29 @@ func (a *PrometheusAdapter) getSummary(name string, helpSuffix string) (summary 
 	return summary
 }
 
-func (a *PrometheusAdapter) getHistogram(name string, helpSuffix string, buckets []float64) (histogram prometheus.Histogram) {
+func (a *PrometheusAdapter) getHistogram(name string, helpSuffix string, buckets []float64, tags *stats.SampleTags) (histogram *histogramWithLabels) {
 	if his, ok := a.metrics[name]; ok {
-		if h, tok := his.(prometheus.Histogram); tok {
+		if h, tok := his.(*histogramWithLabels); tok {
 			histogram = h
+		} else {
+			a.logger.Warn("Wrong metric type found")
 		}
 	}
 
 	if histogram == nil {
-		histogram = prometheus.NewHistogram(prometheus.HistogramOpts{ // nolint:exhaustivestruct
-			Namespace: a.Namespace,
-			Subsystem: a.Subsystem,
-			Name:      name,
-			Help:      helpFor(name, helpSuffix),
-			Buckets:   buckets,
-		})
+		labelNames := a.tagsToLabelNames(tags)
+		histogram = &histogramWithLabels{
+			histogramVec: prometheus.NewHistogramVec(prometheus.HistogramOpts{ // nolint:exhaustivestruct
+				Namespace: a.Namespace,
+				Subsystem: a.Subsystem,
+				Name:      name,
+				Help:      helpFor(name, helpSuffix),
+				Buckets:   buckets,
+			}, labelNames),
+			labelNames: labelNames,
+		}
 
-		if err := a.registry.Register(histogram); err != nil {
+		if err := a.registry.Register(histogram.histogramVec); err != nil {
 			a.logger.Error(err)
 
 			return nil
