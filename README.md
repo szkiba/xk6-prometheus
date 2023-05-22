@@ -6,6 +6,10 @@ Using **xk6-prometheus** output extension you can collect metrics from long runn
 
 Built for [k6](https://go.k6.io/k6) using [xk6](https://github.com/grafana/xk6).
 
+## Download
+
+You can download pre-built k6 binaries from [Releases](https://github.com/szkiba/xk6-prometheus/releases/) page. Check [Packages](https://github.com/szkiba/xk6-prometheus/pkgs/container/xk6-prometheus) page for pre-built k6 Docker images.
+
 ## Build
 
 To build a `k6` binary with this extension, first ensure you have the prerequisites:
@@ -24,8 +28,6 @@ Then:
   ```bash
   $ xk6 build --with github.com/szkiba/xk6-prometheus@latest
   ```
-
-> You should use at least `v0.31.0` version because xk6-prometheus extension registers itself as output extension. This feature introduced in the `v0.31.0` version of k6.
 
 ## Usage
 
