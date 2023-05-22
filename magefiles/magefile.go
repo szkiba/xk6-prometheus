@@ -111,5 +111,5 @@ func xk6run(arg string) shellcmd.Command {
 }
 
 func Run() error {
-	return xk6run(`--out prometheus=namespace=k6 script.js`).Run()
+	return xk6run(`-d 1m --out prometheus=namespace=k6 script.js`).Run()
 }
