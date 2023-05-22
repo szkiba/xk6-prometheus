@@ -1,24 +1,6 @@
-// MIT License
+// SPDX-FileCopyrightText: 2021 - 2023 Iván Szkiba
 //
-// Copyright (c) 2021 Iván Szkiba
-//
-// Permission is hereby granted, free of charge, to any person obtaining a copy
-// of this software and associated documentation files (the "Software"), to deal
-// in the Software without restriction, including without limitation the rights
-// to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
-// copies of the Software, and to permit persons to whom the Software is
-// furnished to do so, subject to the following conditions:
-//
-// The above copyright notice and this permission notice shall be included in all
-// copies or substantial portions of the Software.
-//
-// THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
-// IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
-// FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
-// AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
-// LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
-// OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
-// SOFTWARE.
+// SPDX-License-Identifier: MIT
 
 package internal
 
@@ -82,7 +64,7 @@ func (a *PrometheusAdapter) AddMetricSamples(samples []metrics.SampleContainer) 
 }
 
 func (a *PrometheusAdapter) Handler() http.Handler {
-	return promhttp.HandlerFor(a.registry, promhttp.HandlerOpts{}) // nolint:exhaustivestruct
+	return promhttp.HandlerFor(a.registry, promhttp.HandlerOpts{}) // nolint:exhaustruct
 }
 
 func (a *PrometheusAdapter) handleSample(sample *metrics.Sample) {
@@ -139,6 +121,7 @@ func (a *PrometheusAdapter) handleCounter(sample *metrics.Sample) {
 	if counter := a.getCounter(sample.Metric.Name, "k6 counter", sample.Tags); counter != nil {
 		labelValues := a.tagsToLabelValues(counter.labelNames, sample.Tags)
 		metric, err := counter.counterVec.GetMetricWithLabelValues(labelValues...)
+
 		if err != nil {
 			a.logger.Error(err)
 		} else {
@@ -151,6 +134,7 @@ func (a *PrometheusAdapter) handleGauge(sample *metrics.Sample) {
 	if gauge := a.getGauge(sample.Metric.Name, "k6 gauge", sample.Tags); gauge != nil {
 		labelValues := a.tagsToLabelValues(gauge.labelNames, sample.Tags)
 		metric, err := gauge.gaugeVec.GetMetricWithLabelValues(labelValues...)
+
 		if err != nil {
 			a.logger.Error(err)
 		} else {
@@ -163,6 +147,7 @@ func (a *PrometheusAdapter) handleRate(sample *metrics.Sample) {
 	if histogram := a.getHistogram(sample.Metric.Name, "k6 rate", []float64{0}, sample.Tags); histogram != nil {
 		labelValues := a.tagsToLabelValues(histogram.labelNames, sample.Tags)
 		metric, err := histogram.histogramVec.GetMetricWithLabelValues(labelValues...)
+
 		if err != nil {
 			a.logger.Error(err)
 		} else {
@@ -174,6 +159,7 @@ func (a *PrometheusAdapter) handleRate(sample *metrics.Sample) {
 func (a *PrometheusAdapter) handleTrend(sample *metrics.Sample) {
 	if summary := a.getSummary(sample.Metric.Name, "k6 trend", sample.Tags); summary != nil {
 		labelValues := a.tagsToLabelValues(summary.labelNames, sample.Tags)
+
 		metric, err := summary.summaryVec.GetMetricWithLabelValues(labelValues...)
 		if err != nil {
 			a.logger.Error(err)
@@ -184,6 +170,7 @@ func (a *PrometheusAdapter) handleTrend(sample *metrics.Sample) {
 
 	if gauge := a.getGauge(sample.Metric.Name+"_current", "k6 trend (current)", sample.Tags); gauge != nil {
 		labelValues := a.tagsToLabelValues(gauge.labelNames, sample.Tags)
+
 		metric, err := gauge.gaugeVec.GetMetricWithLabelValues(labelValues...)
 		if err != nil {
 			a.logger.Error(err)
@@ -193,7 +180,9 @@ func (a *PrometheusAdapter) handleTrend(sample *metrics.Sample) {
 	}
 }
 
-func (a *PrometheusAdapter) getCounter(name string, helpSuffix string, tags *metrics.SampleTags) (counter *counterWithLabels) {
+func (a *PrometheusAdapter) getCounter(name string, helpSuffix string, tags *metrics.SampleTags) *counterWithLabels { // nolint:dupl
+	var counter *counterWithLabels
+
 	if col, ok := a.metrics[name]; ok {
 		if c, tok := col.(*counterWithLabels); tok {
 			counter = c
@@ -205,7 +194,7 @@ func (a *PrometheusAdapter) getCounter(name string, helpSuffix string, tags *met
 	if counter == nil {
 		labelNames := a.tagsToLabelNames(tags)
 		counter = &counterWithLabels{
-			counterVec: prometheus.NewCounterVec(prometheus.CounterOpts{ // nolint:exhaustivestruct
+			counterVec: prometheus.NewCounterVec(prometheus.CounterOpts{ // nolint:exhaustruct
 				Namespace: a.Namespace,
 				Subsystem: a.Subsystem,
 				Name:      name,
@@ -226,7 +215,9 @@ func (a *PrometheusAdapter) getCounter(name string, helpSuffix string, tags *met
 	return counter
 }
 
-func (a *PrometheusAdapter) getGauge(name string, helpSuffix string, tags *metrics.SampleTags) (gauge *gaugeWithLabels) {
+func (a *PrometheusAdapter) getGauge(name string, helpSuffix string, tags *metrics.SampleTags) *gaugeWithLabels { // nolint:dupl
+	var gauge *gaugeWithLabels
+
 	if gau, ok := a.metrics[name]; ok {
 		if g, tok := gau.(*gaugeWithLabels); tok {
 			gauge = g
@@ -238,7 +229,7 @@ func (a *PrometheusAdapter) getGauge(name string, helpSuffix string, tags *metri
 	if gauge == nil {
 		labelNames := a.tagsToLabelNames(tags)
 		gauge = &gaugeWithLabels{
-			gaugeVec: prometheus.NewGaugeVec(prometheus.GaugeOpts{ // nolint:exhaustivestruct
+			gaugeVec: prometheus.NewGaugeVec(prometheus.GaugeOpts{ // nolint:exhaustruct
 				Namespace: a.Namespace,
 				Subsystem: a.Subsystem,
 				Name:      name,
@@ -259,7 +250,9 @@ func (a *PrometheusAdapter) getGauge(name string, helpSuffix string, tags *metri
 	return gauge
 }
 
-func (a *PrometheusAdapter) getSummary(name string, helpSuffix string, tags *metrics.SampleTags) (summary *summaryWithLabels) {
+func (a *PrometheusAdapter) getSummary(name string, helpSuffix string, tags *metrics.SampleTags) *summaryWithLabels {
+	var summary *summaryWithLabels
+
 	if sum, ok := a.metrics[name]; ok {
 		if s, tok := sum.(*summaryWithLabels); tok {
 			summary = s
@@ -271,7 +264,7 @@ func (a *PrometheusAdapter) getSummary(name string, helpSuffix string, tags *met
 	if summary == nil {
 		labelNames := a.tagsToLabelNames(tags)
 		summary = &summaryWithLabels{
-			summaryVec: prometheus.NewSummaryVec(prometheus.SummaryOpts{ // nolint:exhaustivestruct
+			summaryVec: prometheus.NewSummaryVec(prometheus.SummaryOpts{ // nolint:exhaustruct
 				Namespace:  a.Namespace,
 				Subsystem:  a.Subsystem,
 				Name:       name,
@@ -293,7 +286,9 @@ func (a *PrometheusAdapter) getSummary(name string, helpSuffix string, tags *met
 	return summary
 }
 
-func (a *PrometheusAdapter) getHistogram(name string, helpSuffix string, buckets []float64, tags *metrics.SampleTags) (histogram *histogramWithLabels) {
+func (a *PrometheusAdapter) getHistogram(name string, helpSuffix string, buckets []float64, tags *metrics.SampleTags) *histogramWithLabels {
+	var histogram *histogramWithLabels
+
 	if his, ok := a.metrics[name]; ok {
 		if h, tok := his.(*histogramWithLabels); tok {
 			histogram = h
@@ -305,7 +300,7 @@ func (a *PrometheusAdapter) getHistogram(name string, helpSuffix string, buckets
 	if histogram == nil {
 		labelNames := a.tagsToLabelNames(tags)
 		histogram = &histogramWithLabels{
-			histogramVec: prometheus.NewHistogramVec(prometheus.HistogramOpts{ // nolint:exhaustivestruct
+			histogramVec: prometheus.NewHistogramVec(prometheus.HistogramOpts{ // nolint:exhaustruct
 				Namespace: a.Namespace,
 				Subsystem: a.Subsystem,
 				Name:      name,
