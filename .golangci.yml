@@ -1,0 +1,37 @@
+# SPDX-FileCopyrightText: 2021 - 2023 Iván Szkiba
+#
+# SPDX-License-Identifier: MIT
+
+linters:
+  presets:
+    - bugs
+    - style
+    - unused
+    - complexity
+    - format
+    - performance
+  enable:
+    - exportloopref
+  disable:
+    - testpackage
+    - nolintlint
+    - gochecknoglobals
+    - gochecknoinits
+    - lll
+    - maligned
+    - interfacer
+    - scopelint
+    - wrapcheck
+# deprecated
+    - deadcode
+    - nosnakecase
+    - exhaustivestruct
+    - ifshort
+    - structcheck
+    - varcheck
+    - golint
+# generics
+    - rowserrcheck
+    - sqlclosecheck
+    - wastedassign
+

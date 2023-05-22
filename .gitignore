@@ -1,2 +1,16 @@
+# SPDX-FileCopyrightText: 2023 Iván Szkiba
+#
+# SPDX-License-Identifier: MIT
+
 k6
-.task
+
+coverage.txt
+
+logs
+*.log
+
+bin
+
+.vscode/*
+!.vscode/extensions.json
+!.vscode/settings.json
