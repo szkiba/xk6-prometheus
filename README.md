@@ -6,26 +6,62 @@ Using **xk6-prometheus** output extension you can collect metrics from long runn
 
 Built for [k6](https://go.k6.io/k6) using [xk6](https://github.com/grafana/xk6).
 
+## Download
+
+You can download pre-built k6 binaries from [Releases](https://github.com/szkiba/xk6-prometheus/releases/) page. Check [Packages](https://github.com/szkiba/xk6-prometheus/pkgs/container/xk6-prometheus) page for pre-built k6 Docker images.
+
 ## Build
 
-To build a `k6` binary with this extension, first ensure you have the prerequisites:
+You can build the k6 binary on various platforms, each with its requirements. The following shows how to build k6 binary with this extension on GNU/Linux distributions.
 
-- [Go toolchain](https://go101.org/article/go-toolchain.html)
-- Git
+### Prerequisites
 
-Then:
+You must have the latest Go version installed to build the k6 binary. The latest version should match [k6](https://github.com/grafana/k6#build-from-source) and [xk6](https://github.com/grafana/xk6#requirements).
 
-1. Download `xk6`:
-  ```bash
-  $ go install go.k6.io/xk6/cmd/xk6@latest
-  ```
+- [Git](https://git-scm.com/) for cloning the project
+- [xk6](https://github.com/grafana/xk6) for building k6 binary with extensions
+
+### Install and build the latest tagged version
+
+1. Install `xk6`:
+
+   ```shell
+   go install go.k6.io/xk6/cmd/xk6@latest
+   ```
 
 2. Build the binary:
-  ```bash
-  $ xk6 build --with github.com/szkiba/xk6-prometheus@latest
-  ```
 
-> You should use at least `v0.31.0` version because xk6-prometheus extension registers itself as output extension. This feature introduced in the `v0.31.0` version of k6.
+   ```shell
+   xk6 build --with github.com/szkiba/xk6-prometheus@latest
+   ```
+
+> **Note**
+> You can always use the latest version of k6 to build the extension, but the earliest version of k6 that supports extensions via xk6 is v0.43.0. The xk6 is constantly evolving, so some APIs may not be backward compatible.
+
+### Build for development
+
+If you want to add a feature or make a fix, clone the project and build it using the following commands. The xk6 will force the build to use the local clone instead of fetching the latest version from the repository. This process enables you to update the code and test it locally.
+
+```bash
+git clone git@github.com:szkiba/xk6-prometheus.git && cd xk6-prometheus
+xk6 build --with github.com/szkiba/xk6-prometheus@latest=.
+```
+
+## Docker
+
+You can also use pre-built k6 image within a Docker container. In order to do that, you will need to execute something like the following:
+
+**Linux**
+
+```plain
+docker run -v $(pwd):/scripts -it --rm ghcr.io/szkiba/xk6-prometheus:latest run -d 1m --out=dashboard /scripts/script.js
+```
+
+**Windows**
+
+```plain
+docker run -v %cd%:/scripts -it --rm ghcr.io/szkiba/xk6-prometheus:latest run -d 1m --out=prometheus /scripts/script.js
+```
 
 ## Usage
 
@@ -99,114 +135,168 @@ Here is the relevant part of the metrics HTTP response:
 ```plain
 # HELP k6_data_received The amount of received data
 # TYPE k6_data_received counter
-k6_data_received{group="",scenario="default"} 430237
+k6_data_received{group="",scenario="default",tls_version=""} 538700
 # HELP k6_data_sent The amount of data sent
 # TYPE k6_data_sent counter
-k6_data_sent{group="",scenario="default"} 2888
+k6_data_sent{group="",scenario="default",tls_version=""} 9430
 # HELP k6_http_req_blocked Time spent blocked  before initiating the request
 # TYPE k6_http_req_blocked summary
-k6_http_req_blocked{expected_response="true",group="",method="GET",name="http://test.k6.io",proto="HTTP/1.1",scenario="default",status="200",url="http://test.k6.io",quantile="0.5"} 0.00377
-k6_http_req_blocked{expected_response="true",group="",method="GET",name="http://test.k6.io",proto="HTTP/1.1",scenario="default",status="200",url="http://test.k6.io",quantile="0.9"} 0.008411
-k6_http_req_blocked{expected_response="true",group="",method="GET",name="http://test.k6.io",proto="HTTP/1.1",scenario="default",status="200",url="http://test.k6.io",quantile="0.95"} 0.016064
-k6_http_req_blocked{expected_response="true",group="",method="GET",name="http://test.k6.io",proto="HTTP/1.1",scenario="default",status="200",url="http://test.k6.io",quantile="1"} 872.706547
-k6_http_req_blocked_sum{expected_response="true",group="",method="GET",name="http://test.k6.io",proto="HTTP/1.1",scenario="default",status="200",url="http://test.k6.io"} 872.8805460000001
-k6_http_req_blocked_count{expected_response="true",group="",method="GET",name="http://test.k6.io",proto="HTTP/1.1",scenario="default",status="200",url="http://test.k6.io"} 38
+k6_http_req_blocked{expected_response="true",group="",method="GET",name="http://test.k6.io",proto="HTTP/1.1",scenario="default",status="308",tls_version="",url="http://test.k6.io",quantile="0.5"} 0.003216
+k6_http_req_blocked{expected_response="true",group="",method="GET",name="http://test.k6.io",proto="HTTP/1.1",scenario="default",status="308",tls_version="",url="http://test.k6.io",quantile="0.9"} 0.00461
+k6_http_req_blocked{expected_response="true",group="",method="GET",name="http://test.k6.io",proto="HTTP/1.1",scenario="default",status="308",tls_version="",url="http://test.k6.io",quantile="0.95"} 0.005075
+k6_http_req_blocked{expected_response="true",group="",method="GET",name="http://test.k6.io",proto="HTTP/1.1",scenario="default",status="308",tls_version="",url="http://test.k6.io",quantile="1"} 149.563383
+k6_http_req_blocked_sum{expected_response="true",group="",method="GET",name="http://test.k6.io",proto="HTTP/1.1",scenario="default",status="308",tls_version="",url="http://test.k6.io"} 149.7171700000001
+k6_http_req_blocked_count{expected_response="true",group="",method="GET",name="http://test.k6.io",proto="HTTP/1.1",scenario="default",status="308",tls_version="",url="http://test.k6.io"} 46
+k6_http_req_blocked{expected_response="true",group="",method="GET",name="https://test.k6.io/",proto="HTTP/1.1",scenario="default",status="200",tls_version="tls1.3",url="https://test.k6.io/",quantile="0.5"} 0.002711
+k6_http_req_blocked{expected_response="true",group="",method="GET",name="https://test.k6.io/",proto="HTTP/1.1",scenario="default",status="200",tls_version="tls1.3",url="https://test.k6.io/",quantile="0.9"} 0.01625
+k6_http_req_blocked{expected_response="true",group="",method="GET",name="https://test.k6.io/",proto="HTTP/1.1",scenario="default",status="200",tls_version="tls1.3",url="https://test.k6.io/",quantile="0.95"} 0.02094
+k6_http_req_blocked{expected_response="true",group="",method="GET",name="https://test.k6.io/",proto="HTTP/1.1",scenario="default",status="200",tls_version="tls1.3",url="https://test.k6.io/",quantile="1"} 247.720682
+k6_http_req_blocked_sum{expected_response="true",group="",method="GET",name="https://test.k6.io/",proto="HTTP/1.1",scenario="default",status="200",tls_version="tls1.3",url="https://test.k6.io/"} 247.94551300000003
+k6_http_req_blocked_count{expected_response="true",group="",method="GET",name="https://test.k6.io/",proto="HTTP/1.1",scenario="default",status="200",tls_version="tls1.3",url="https://test.k6.io/"} 46
 # HELP k6_http_req_blocked_current Time spent blocked  before initiating the request (current)
 # TYPE k6_http_req_blocked_current gauge
-k6_http_req_blocked_current{expected_response="true",group="",method="GET",name="http://test.k6.io",proto="HTTP/1.1",scenario="default",status="200",url="http://test.k6.io"} 0.003246
+k6_http_req_blocked_current{expected_response="true",group="",method="GET",name="http://test.k6.io",proto="HTTP/1.1",scenario="default",status="308",tls_version="",url="http://test.k6.io"} 0.005075
+k6_http_req_blocked_current{expected_response="true",group="",method="GET",name="https://test.k6.io/",proto="HTTP/1.1",scenario="default",status="200",tls_version="tls1.3",url="https://test.k6.io/"} 0.00299
 # HELP k6_http_req_connecting Time spent establishing TCP connection
 # TYPE k6_http_req_connecting summary
-k6_http_req_connecting{expected_response="true",group="",method="GET",name="http://test.k6.io",proto="HTTP/1.1",scenario="default",status="200",url="http://test.k6.io",quantile="0.5"} 0
-k6_http_req_connecting{expected_response="true",group="",method="GET",name="http://test.k6.io",proto="HTTP/1.1",scenario="default",status="200",url="http://test.k6.io",quantile="0.9"} 0
-k6_http_req_connecting{expected_response="true",group="",method="GET",name="http://test.k6.io",proto="HTTP/1.1",scenario="default",status="200",url="http://test.k6.io",quantile="0.95"} 0
-k6_http_req_connecting{expected_response="true",group="",method="GET",name="http://test.k6.io",proto="HTTP/1.1",scenario="default",status="200",url="http://test.k6.io",quantile="1"} 424.67631
-k6_http_req_connecting_sum{expected_response="true",group="",method="GET",name="http://test.k6.io",proto="HTTP/1.1",scenario="default",status="200",url="http://test.k6.io"} 424.67631
-k6_http_req_connecting_count{expected_response="true",group="",method="GET",name="http://test.k6.io",proto="HTTP/1.1",scenario="default",status="200",url="http://test.k6.io"} 38
+k6_http_req_connecting{expected_response="true",group="",method="GET",name="http://test.k6.io",proto="HTTP/1.1",scenario="default",status="308",tls_version="",url="http://test.k6.io",quantile="0.5"} 0
+k6_http_req_connecting{expected_response="true",group="",method="GET",name="http://test.k6.io",proto="HTTP/1.1",scenario="default",status="308",tls_version="",url="http://test.k6.io",quantile="0.9"} 0
+k6_http_req_connecting{expected_response="true",group="",method="GET",name="http://test.k6.io",proto="HTTP/1.1",scenario="default",status="308",tls_version="",url="http://test.k6.io",quantile="0.95"} 0
+k6_http_req_connecting{expected_response="true",group="",method="GET",name="http://test.k6.io",proto="HTTP/1.1",scenario="default",status="308",tls_version="",url="http://test.k6.io",quantile="1"} 122.939469
+k6_http_req_connecting_sum{expected_response="true",group="",method="GET",name="http://test.k6.io",proto="HTTP/1.1",scenario="default",status="308",tls_version="",url="http://test.k6.io"} 122.939469
+k6_http_req_connecting_count{expected_response="true",group="",method="GET",name="http://test.k6.io",proto="HTTP/1.1",scenario="default",status="308",tls_version="",url="http://test.k6.io"} 46
+k6_http_req_connecting{expected_response="true",group="",method="GET",name="https://test.k6.io/",proto="HTTP/1.1",scenario="default",status="200",tls_version="tls1.3",url="https://test.k6.io/",quantile="0.5"} 0
+k6_http_req_connecting{expected_response="true",group="",method="GET",name="https://test.k6.io/",proto="HTTP/1.1",scenario="default",status="200",tls_version="tls1.3",url="https://test.k6.io/",quantile="0.9"} 0
+k6_http_req_connecting{expected_response="true",group="",method="GET",name="https://test.k6.io/",proto="HTTP/1.1",scenario="default",status="200",tls_version="tls1.3",url="https://test.k6.io/",quantile="0.95"} 0
+k6_http_req_connecting{expected_response="true",group="",method="GET",name="https://test.k6.io/",proto="HTTP/1.1",scenario="default",status="200",tls_version="tls1.3",url="https://test.k6.io/",quantile="1"} 123.300371
+k6_http_req_connecting_sum{expected_response="true",group="",method="GET",name="https://test.k6.io/",proto="HTTP/1.1",scenario="default",status="200",tls_version="tls1.3",url="https://test.k6.io/"} 123.300371
+k6_http_req_connecting_count{expected_response="true",group="",method="GET",name="https://test.k6.io/",proto="HTTP/1.1",scenario="default",status="200",tls_version="tls1.3",url="https://test.k6.io/"} 46
 # HELP k6_http_req_connecting_current Time spent establishing TCP connection (current)
 # TYPE k6_http_req_connecting_current gauge
-k6_http_req_connecting_current{expected_response="true",group="",method="GET",name="http://test.k6.io",proto="HTTP/1.1",scenario="default",status="200",url="http://test.k6.io"} 0
+k6_http_req_connecting_current{expected_response="true",group="",method="GET",name="http://test.k6.io",proto="HTTP/1.1",scenario="default",status="308",tls_version="",url="http://test.k6.io"} 0
+k6_http_req_connecting_current{expected_response="true",group="",method="GET",name="https://test.k6.io/",proto="HTTP/1.1",scenario="default",status="200",tls_version="tls1.3",url="https://test.k6.io/"} 0
 # HELP k6_http_req_duration Total time for the request
 # TYPE k6_http_req_duration summary
-k6_http_req_duration{expected_response="true",group="",method="GET",name="http://test.k6.io",proto="HTTP/1.1",scenario="default",status="200",url="http://test.k6.io",quantile="0.5"} 433.957267
-k6_http_req_duration{expected_response="true",group="",method="GET",name="http://test.k6.io",proto="HTTP/1.1",scenario="default",status="200",url="http://test.k6.io",quantile="0.9"} 850.686511
-k6_http_req_duration{expected_response="true",group="",method="GET",name="http://test.k6.io",proto="HTTP/1.1",scenario="default",status="200",url="http://test.k6.io",quantile="0.95"} 975.504212
-k6_http_req_duration{expected_response="true",group="",method="GET",name="http://test.k6.io",proto="HTTP/1.1",scenario="default",status="200",url="http://test.k6.io",quantile="1"} 3292.618482
-k6_http_req_duration_sum{expected_response="true",group="",method="GET",name="http://test.k6.io",proto="HTTP/1.1",scenario="default",status="200",url="http://test.k6.io"} 21587.420325
-k6_http_req_duration_count{expected_response="true",group="",method="GET",name="http://test.k6.io",proto="HTTP/1.1",scenario="default",status="200",url="http://test.k6.io"} 38
+k6_http_req_duration{expected_response="true",group="",method="GET",name="http://test.k6.io",proto="HTTP/1.1",scenario="default",status="308",tls_version="",url="http://test.k6.io",quantile="0.5"} 122.284411
+k6_http_req_duration{expected_response="true",group="",method="GET",name="http://test.k6.io",proto="HTTP/1.1",scenario="default",status="308",tls_version="",url="http://test.k6.io",quantile="0.9"} 122.467859
+k6_http_req_duration{expected_response="true",group="",method="GET",name="http://test.k6.io",proto="HTTP/1.1",scenario="default",status="308",tls_version="",url="http://test.k6.io",quantile="0.95"} 122.754156
+k6_http_req_duration{expected_response="true",group="",method="GET",name="http://test.k6.io",proto="HTTP/1.1",scenario="default",status="308",tls_version="",url="http://test.k6.io",quantile="1"} 125.132449
+k6_http_req_duration_sum{expected_response="true",group="",method="GET",name="http://test.k6.io",proto="HTTP/1.1",scenario="default",status="308",tls_version="",url="http://test.k6.io"} 5624.683091
+k6_http_req_duration_count{expected_response="true",group="",method="GET",name="http://test.k6.io",proto="HTTP/1.1",scenario="default",status="308",tls_version="",url="http://test.k6.io"} 46
+k6_http_req_duration{expected_response="true",group="",method="GET",name="https://test.k6.io/",proto="HTTP/1.1",scenario="default",status="200",tls_version="tls1.3",url="https://test.k6.io/",quantile="0.5"} 125.11121
+k6_http_req_duration{expected_response="true",group="",method="GET",name="https://test.k6.io/",proto="HTTP/1.1",scenario="default",status="200",tls_version="tls1.3",url="https://test.k6.io/",quantile="0.9"} 126.739617
+k6_http_req_duration{expected_response="true",group="",method="GET",name="https://test.k6.io/",proto="HTTP/1.1",scenario="default",status="200",tls_version="tls1.3",url="https://test.k6.io/",quantile="0.95"} 247.217049
+k6_http_req_duration{expected_response="true",group="",method="GET",name="https://test.k6.io/",proto="HTTP/1.1",scenario="default",status="200",tls_version="tls1.3",url="https://test.k6.io/",quantile="1"} 248.484052
+k6_http_req_duration_sum{expected_response="true",group="",method="GET",name="https://test.k6.io/",proto="HTTP/1.1",scenario="default",status="200",tls_version="tls1.3",url="https://test.k6.io/"} 6126.750080999999
+k6_http_req_duration_count{expected_response="true",group="",method="GET",name="https://test.k6.io/",proto="HTTP/1.1",scenario="default",status="200",tls_version="tls1.3",url="https://test.k6.io/"} 46
 # HELP k6_http_req_duration_current Total time for the request (current)
 # TYPE k6_http_req_duration_current gauge
-k6_http_req_duration_current{expected_response="true",group="",method="GET",name="http://test.k6.io",proto="HTTP/1.1",scenario="default",status="200",url="http://test.k6.io"} 418.772552
+k6_http_req_duration_current{expected_response="true",group="",method="GET",name="http://test.k6.io",proto="HTTP/1.1",scenario="default",status="308",tls_version="",url="http://test.k6.io"} 122.316288
+k6_http_req_duration_current{expected_response="true",group="",method="GET",name="https://test.k6.io/",proto="HTTP/1.1",scenario="default",status="200",tls_version="tls1.3",url="https://test.k6.io/"} 124.662895
 # HELP k6_http_req_failed The rate of failed requests
 # TYPE k6_http_req_failed histogram
-k6_http_req_failed_bucket{expected_response="true",group="",method="GET",name="http://test.k6.io",proto="HTTP/1.1",scenario="default",status="200",url="http://test.k6.io",le="0"} 38
-k6_http_req_failed_bucket{expected_response="true",group="",method="GET",name="http://test.k6.io",proto="HTTP/1.1",scenario="default",status="200",url="http://test.k6.io",le="+Inf"} 38
-k6_http_req_failed_sum{expected_response="true",group="",method="GET",name="http://test.k6.io",proto="HTTP/1.1",scenario="default",status="200",url="http://test.k6.io"} 0
-k6_http_req_failed_count{expected_response="true",group="",method="GET",name="http://test.k6.io",proto="HTTP/1.1",scenario="default",status="200",url="http://test.k6.io"} 38
+k6_http_req_failed_bucket{expected_response="true",group="",method="GET",name="http://test.k6.io",proto="HTTP/1.1",scenario="default",status="308",tls_version="",url="http://test.k6.io",le="0"} 46
+k6_http_req_failed_bucket{expected_response="true",group="",method="GET",name="http://test.k6.io",proto="HTTP/1.1",scenario="default",status="308",tls_version="",url="http://test.k6.io",le="+Inf"} 46
+k6_http_req_failed_sum{expected_response="true",group="",method="GET",name="http://test.k6.io",proto="HTTP/1.1",scenario="default",status="308",tls_version="",url="http://test.k6.io"} 0
+k6_http_req_failed_count{expected_response="true",group="",method="GET",name="http://test.k6.io",proto="HTTP/1.1",scenario="default",status="308",tls_version="",url="http://test.k6.io"} 46
+k6_http_req_failed_bucket{expected_response="true",group="",method="GET",name="https://test.k6.io/",proto="HTTP/1.1",scenario="default",status="200",tls_version="tls1.3",url="https://test.k6.io/",le="0"} 46
+k6_http_req_failed_bucket{expected_response="true",group="",method="GET",name="https://test.k6.io/",proto="HTTP/1.1",scenario="default",status="200",tls_version="tls1.3",url="https://test.k6.io/",le="+Inf"} 46
+k6_http_req_failed_sum{expected_response="true",group="",method="GET",name="https://test.k6.io/",proto="HTTP/1.1",scenario="default",status="200",tls_version="tls1.3",url="https://test.k6.io/"} 0
+k6_http_req_failed_count{expected_response="true",group="",method="GET",name="https://test.k6.io/",proto="HTTP/1.1",scenario="default",status="200",tls_version="tls1.3",url="https://test.k6.io/"} 46
 # HELP k6_http_req_receiving Time spent receiving response data
 # TYPE k6_http_req_receiving summary
-k6_http_req_receiving{expected_response="true",group="",method="GET",name="http://test.k6.io",proto="HTTP/1.1",scenario="default",status="200",url="http://test.k6.io",quantile="0.5"} 1.729595
-k6_http_req_receiving{expected_response="true",group="",method="GET",name="http://test.k6.io",proto="HTTP/1.1",scenario="default",status="200",url="http://test.k6.io",quantile="0.9"} 5.581774
-k6_http_req_receiving{expected_response="true",group="",method="GET",name="http://test.k6.io",proto="HTTP/1.1",scenario="default",status="200",url="http://test.k6.io",quantile="0.95"} 512.29381
-k6_http_req_receiving{expected_response="true",group="",method="GET",name="http://test.k6.io",proto="HTTP/1.1",scenario="default",status="200",url="http://test.k6.io",quantile="1"} 1533.230124
-k6_http_req_receiving_sum{expected_response="true",group="",method="GET",name="http://test.k6.io",proto="HTTP/1.1",scenario="default",status="200",url="http://test.k6.io"} 2532.616402999998
-k6_http_req_receiving_count{expected_response="true",group="",method="GET",name="http://test.k6.io",proto="HTTP/1.1",scenario="default",status="200",url="http://test.k6.io"} 38
+k6_http_req_receiving{expected_response="true",group="",method="GET",name="http://test.k6.io",proto="HTTP/1.1",scenario="default",status="308",tls_version="",url="http://test.k6.io",quantile="0.5"} 0.081936
+k6_http_req_receiving{expected_response="true",group="",method="GET",name="http://test.k6.io",proto="HTTP/1.1",scenario="default",status="308",tls_version="",url="http://test.k6.io",quantile="0.9"} 0.104153
+k6_http_req_receiving{expected_response="true",group="",method="GET",name="http://test.k6.io",proto="HTTP/1.1",scenario="default",status="308",tls_version="",url="http://test.k6.io",quantile="0.95"} 0.112347
+k6_http_req_receiving{expected_response="true",group="",method="GET",name="http://test.k6.io",proto="HTTP/1.1",scenario="default",status="308",tls_version="",url="http://test.k6.io",quantile="1"} 0.11385
+k6_http_req_receiving_sum{expected_response="true",group="",method="GET",name="http://test.k6.io",proto="HTTP/1.1",scenario="default",status="308",tls_version="",url="http://test.k6.io"} 3.6835980000000004
+k6_http_req_receiving_count{expected_response="true",group="",method="GET",name="http://test.k6.io",proto="HTTP/1.1",scenario="default",status="308",tls_version="",url="http://test.k6.io"} 46
+k6_http_req_receiving{expected_response="true",group="",method="GET",name="https://test.k6.io/",proto="HTTP/1.1",scenario="default",status="200",tls_version="tls1.3",url="https://test.k6.io/",quantile="0.5"} 0.083326
+k6_http_req_receiving{expected_response="true",group="",method="GET",name="https://test.k6.io/",proto="HTTP/1.1",scenario="default",status="200",tls_version="tls1.3",url="https://test.k6.io/",quantile="0.9"} 0.21554
+k6_http_req_receiving{expected_response="true",group="",method="GET",name="https://test.k6.io/",proto="HTTP/1.1",scenario="default",status="200",tls_version="tls1.3",url="https://test.k6.io/",quantile="0.95"} 122.142645
+k6_http_req_receiving{expected_response="true",group="",method="GET",name="https://test.k6.io/",proto="HTTP/1.1",scenario="default",status="200",tls_version="tls1.3",url="https://test.k6.io/",quantile="1"} 122.322618
+k6_http_req_receiving_sum{expected_response="true",group="",method="GET",name="https://test.k6.io/",proto="HTTP/1.1",scenario="default",status="200",tls_version="tls1.3",url="https://test.k6.io/"} 370.93958899999996
+k6_http_req_receiving_count{expected_response="true",group="",method="GET",name="https://test.k6.io/",proto="HTTP/1.1",scenario="default",status="200",tls_version="tls1.3",url="https://test.k6.io/"} 46
 # HELP k6_http_req_receiving_current Time spent receiving response data (current)
 # TYPE k6_http_req_receiving_current gauge
-k6_http_req_receiving_current{expected_response="true",group="",method="GET",name="http://test.k6.io",proto="HTTP/1.1",scenario="default",status="200",url="http://test.k6.io"} 2.20869
+k6_http_req_receiving_current{expected_response="true",group="",method="GET",name="http://test.k6.io",proto="HTTP/1.1",scenario="default",status="308",tls_version="",url="http://test.k6.io"} 0.068918
+k6_http_req_receiving_current{expected_response="true",group="",method="GET",name="https://test.k6.io/",proto="HTTP/1.1",scenario="default",status="200",tls_version="tls1.3",url="https://test.k6.io/"} 0.086082
 # HELP k6_http_req_sending Time spent sending data
 # TYPE k6_http_req_sending summary
-k6_http_req_sending{expected_response="true",group="",method="GET",name="http://test.k6.io",proto="HTTP/1.1",scenario="default",status="200",url="http://test.k6.io",quantile="0.5"} 0.015493
-k6_http_req_sending{expected_response="true",group="",method="GET",name="http://test.k6.io",proto="HTTP/1.1",scenario="default",status="200",url="http://test.k6.io",quantile="0.9"} 0.026709
-k6_http_req_sending{expected_response="true",group="",method="GET",name="http://test.k6.io",proto="HTTP/1.1",scenario="default",status="200",url="http://test.k6.io",quantile="0.95"} 0.030378
-k6_http_req_sending{expected_response="true",group="",method="GET",name="http://test.k6.io",proto="HTTP/1.1",scenario="default",status="200",url="http://test.k6.io",quantile="1"} 0.095429
-k6_http_req_sending_sum{expected_response="true",group="",method="GET",name="http://test.k6.io",proto="HTTP/1.1",scenario="default",status="200",url="http://test.k6.io"} 0.7408489999999998
-k6_http_req_sending_count{expected_response="true",group="",method="GET",name="http://test.k6.io",proto="HTTP/1.1",scenario="default",status="200",url="http://test.k6.io"} 38
+k6_http_req_sending{expected_response="true",group="",method="GET",name="http://test.k6.io",proto="HTTP/1.1",scenario="default",status="308",tls_version="",url="http://test.k6.io",quantile="0.5"} 0.012458
+k6_http_req_sending{expected_response="true",group="",method="GET",name="http://test.k6.io",proto="HTTP/1.1",scenario="default",status="308",tls_version="",url="http://test.k6.io",quantile="0.9"} 0.030467
+k6_http_req_sending{expected_response="true",group="",method="GET",name="http://test.k6.io",proto="HTTP/1.1",scenario="default",status="308",tls_version="",url="http://test.k6.io",quantile="0.95"} 0.035746
+k6_http_req_sending{expected_response="true",group="",method="GET",name="http://test.k6.io",proto="HTTP/1.1",scenario="default",status="308",tls_version="",url="http://test.k6.io",quantile="1"} 0.126034
+k6_http_req_sending_sum{expected_response="true",group="",method="GET",name="http://test.k6.io",proto="HTTP/1.1",scenario="default",status="308",tls_version="",url="http://test.k6.io"} 0.8089879999999999
+k6_http_req_sending_count{expected_response="true",group="",method="GET",name="http://test.k6.io",proto="HTTP/1.1",scenario="default",status="308",tls_version="",url="http://test.k6.io"} 46
+k6_http_req_sending{expected_response="true",group="",method="GET",name="https://test.k6.io/",proto="HTTP/1.1",scenario="default",status="200",tls_version="tls1.3",url="https://test.k6.io/",quantile="0.5"} 0.012556
+k6_http_req_sending{expected_response="true",group="",method="GET",name="https://test.k6.io/",proto="HTTP/1.1",scenario="default",status="200",tls_version="tls1.3",url="https://test.k6.io/",quantile="0.9"} 0.01823
+k6_http_req_sending{expected_response="true",group="",method="GET",name="https://test.k6.io/",proto="HTTP/1.1",scenario="default",status="200",tls_version="tls1.3",url="https://test.k6.io/",quantile="0.95"} 0.026959
+k6_http_req_sending{expected_response="true",group="",method="GET",name="https://test.k6.io/",proto="HTTP/1.1",scenario="default",status="200",tls_version="tls1.3",url="https://test.k6.io/",quantile="1"} 0.066358
+k6_http_req_sending_sum{expected_response="true",group="",method="GET",name="https://test.k6.io/",proto="HTTP/1.1",scenario="default",status="200",tls_version="tls1.3",url="https://test.k6.io/"} 0.689001
+k6_http_req_sending_count{expected_response="true",group="",method="GET",name="https://test.k6.io/",proto="HTTP/1.1",scenario="default",status="200",tls_version="tls1.3",url="https://test.k6.io/"} 46
 # HELP k6_http_req_sending_current Time spent sending data (current)
 # TYPE k6_http_req_sending_current gauge
-k6_http_req_sending_current{expected_response="true",group="",method="GET",name="http://test.k6.io",proto="HTTP/1.1",scenario="default",status="200",url="http://test.k6.io"} 0.013392
+k6_http_req_sending_current{expected_response="true",group="",method="GET",name="http://test.k6.io",proto="HTTP/1.1",scenario="default",status="308",tls_version="",url="http://test.k6.io"} 0.01234
+k6_http_req_sending_current{expected_response="true",group="",method="GET",name="https://test.k6.io/",proto="HTTP/1.1",scenario="default",status="200",tls_version="tls1.3",url="https://test.k6.io/"} 0.012584
 # HELP k6_http_req_tls_handshaking Time spent handshaking TLS session
 # TYPE k6_http_req_tls_handshaking summary
-k6_http_req_tls_handshaking{expected_response="true",group="",method="GET",name="http://test.k6.io",proto="HTTP/1.1",scenario="default",status="200",url="http://test.k6.io",quantile="0.5"} 0
-k6_http_req_tls_handshaking{expected_response="true",group="",method="GET",name="http://test.k6.io",proto="HTTP/1.1",scenario="default",status="200",url="http://test.k6.io",quantile="0.9"} 0
-k6_http_req_tls_handshaking{expected_response="true",group="",method="GET",name="http://test.k6.io",proto="HTTP/1.1",scenario="default",status="200",url="http://test.k6.io",quantile="0.95"} 0
-k6_http_req_tls_handshaking{expected_response="true",group="",method="GET",name="http://test.k6.io",proto="HTTP/1.1",scenario="default",status="200",url="http://test.k6.io",quantile="1"} 0
-k6_http_req_tls_handshaking_sum{expected_response="true",group="",method="GET",name="http://test.k6.io",proto="HTTP/1.1",scenario="default",status="200",url="http://test.k6.io"} 0
-k6_http_req_tls_handshaking_count{expected_response="true",group="",method="GET",name="http://test.k6.io",proto="HTTP/1.1",scenario="default",status="200",url="http://test.k6.io"} 38
+k6_http_req_tls_handshaking{expected_response="true",group="",method="GET",name="http://test.k6.io",proto="HTTP/1.1",scenario="default",status="308",tls_version="",url="http://test.k6.io",quantile="0.5"} 0
+k6_http_req_tls_handshaking{expected_response="true",group="",method="GET",name="http://test.k6.io",proto="HTTP/1.1",scenario="default",status="308",tls_version="",url="http://test.k6.io",quantile="0.9"} 0
+k6_http_req_tls_handshaking{expected_response="true",group="",method="GET",name="http://test.k6.io",proto="HTTP/1.1",scenario="default",status="308",tls_version="",url="http://test.k6.io",quantile="0.95"} 0
+k6_http_req_tls_handshaking{expected_response="true",group="",method="GET",name="http://test.k6.io",proto="HTTP/1.1",scenario="default",status="308",tls_version="",url="http://test.k6.io",quantile="1"} 0
+k6_http_req_tls_handshaking_sum{expected_response="true",group="",method="GET",name="http://test.k6.io",proto="HTTP/1.1",scenario="default",status="308",tls_version="",url="http://test.k6.io"} 0
+k6_http_req_tls_handshaking_count{expected_response="true",group="",method="GET",name="http://test.k6.io",proto="HTTP/1.1",scenario="default",status="308",tls_version="",url="http://test.k6.io"} 46
+k6_http_req_tls_handshaking{expected_response="true",group="",method="GET",name="https://test.k6.io/",proto="HTTP/1.1",scenario="default",status="200",tls_version="tls1.3",url="https://test.k6.io/",quantile="0.5"} 0
+k6_http_req_tls_handshaking{expected_response="true",group="",method="GET",name="https://test.k6.io/",proto="HTTP/1.1",scenario="default",status="200",tls_version="tls1.3",url="https://test.k6.io/",quantile="0.9"} 0
+k6_http_req_tls_handshaking{expected_response="true",group="",method="GET",name="https://test.k6.io/",proto="HTTP/1.1",scenario="default",status="200",tls_version="tls1.3",url="https://test.k6.io/",quantile="0.95"} 0
+k6_http_req_tls_handshaking{expected_response="true",group="",method="GET",name="https://test.k6.io/",proto="HTTP/1.1",scenario="default",status="200",tls_version="tls1.3",url="https://test.k6.io/",quantile="1"} 124.308137
+k6_http_req_tls_handshaking_sum{expected_response="true",group="",method="GET",name="https://test.k6.io/",proto="HTTP/1.1",scenario="default",status="200",tls_version="tls1.3",url="https://test.k6.io/"} 124.308137
+k6_http_req_tls_handshaking_count{expected_response="true",group="",method="GET",name="https://test.k6.io/",proto="HTTP/1.1",scenario="default",status="200",tls_version="tls1.3",url="https://test.k6.io/"} 46
 # HELP k6_http_req_tls_handshaking_current Time spent handshaking TLS session (current)
 # TYPE k6_http_req_tls_handshaking_current gauge
-k6_http_req_tls_handshaking_current{expected_response="true",group="",method="GET",name="http://test.k6.io",proto="HTTP/1.1",scenario="default",status="200",url="http://test.k6.io"} 0
+k6_http_req_tls_handshaking_current{expected_response="true",group="",method="GET",name="http://test.k6.io",proto="HTTP/1.1",scenario="default",status="308",tls_version="",url="http://test.k6.io"} 0
+k6_http_req_tls_handshaking_current{expected_response="true",group="",method="GET",name="https://test.k6.io/",proto="HTTP/1.1",scenario="default",status="200",tls_version="tls1.3",url="https://test.k6.io/"} 0
 # HELP k6_http_req_waiting Time spent waiting for response
 # TYPE k6_http_req_waiting summary
-k6_http_req_waiting{expected_response="true",group="",method="GET",name="http://test.k6.io",proto="HTTP/1.1",scenario="default",status="200",url="http://test.k6.io",quantile="0.5"} 431.363566
-k6_http_req_waiting{expected_response="true",group="",method="GET",name="http://test.k6.io",proto="HTTP/1.1",scenario="default",status="200",url="http://test.k6.io",quantile="0.9"} 535.981583
-k6_http_req_waiting{expected_response="true",group="",method="GET",name="http://test.k6.io",proto="HTTP/1.1",scenario="default",status="200",url="http://test.k6.io",quantile="0.95"} 975.42239
-k6_http_req_waiting{expected_response="true",group="",method="GET",name="http://test.k6.io",proto="HTTP/1.1",scenario="default",status="200",url="http://test.k6.io",quantile="1"} 1759.361649
-k6_http_req_waiting_sum{expected_response="true",group="",method="GET",name="http://test.k6.io",proto="HTTP/1.1",scenario="default",status="200",url="http://test.k6.io"} 19054.063072999994
-k6_http_req_waiting_count{expected_response="true",group="",method="GET",name="http://test.k6.io",proto="HTTP/1.1",scenario="default",status="200",url="http://test.k6.io"} 38
+k6_http_req_waiting{expected_response="true",group="",method="GET",name="http://test.k6.io",proto="HTTP/1.1",scenario="default",status="308",tls_version="",url="http://test.k6.io",quantile="0.5"} 122.205979
+k6_http_req_waiting{expected_response="true",group="",method="GET",name="http://test.k6.io",proto="HTTP/1.1",scenario="default",status="308",tls_version="",url="http://test.k6.io",quantile="0.9"} 122.381221
+k6_http_req_waiting{expected_response="true",group="",method="GET",name="http://test.k6.io",proto="HTTP/1.1",scenario="default",status="308",tls_version="",url="http://test.k6.io",quantile="0.95"} 122.639074
+k6_http_req_waiting{expected_response="true",group="",method="GET",name="http://test.k6.io",proto="HTTP/1.1",scenario="default",status="308",tls_version="",url="http://test.k6.io",quantile="1"} 124.892565
+k6_http_req_waiting_sum{expected_response="true",group="",method="GET",name="http://test.k6.io",proto="HTTP/1.1",scenario="default",status="308",tls_version="",url="http://test.k6.io"} 5620.190505
+k6_http_req_waiting_count{expected_response="true",group="",method="GET",name="http://test.k6.io",proto="HTTP/1.1",scenario="default",status="308",tls_version="",url="http://test.k6.io"} 46
+k6_http_req_waiting{expected_response="true",group="",method="GET",name="https://test.k6.io/",proto="HTTP/1.1",scenario="default",status="200",tls_version="tls1.3",url="https://test.k6.io/",quantile="0.5"} 124.969742
+k6_http_req_waiting{expected_response="true",group="",method="GET",name="https://test.k6.io/",proto="HTTP/1.1",scenario="default",status="200",tls_version="tls1.3",url="https://test.k6.io/",quantile="0.9"} 126.042663
+k6_http_req_waiting{expected_response="true",group="",method="GET",name="https://test.k6.io/",proto="HTTP/1.1",scenario="default",status="200",tls_version="tls1.3",url="https://test.k6.io/",quantile="0.95"} 126.218584
+k6_http_req_waiting{expected_response="true",group="",method="GET",name="https://test.k6.io/",proto="HTTP/1.1",scenario="default",status="200",tls_version="tls1.3",url="https://test.k6.io/",quantile="1"} 126.747568
+k6_http_req_waiting_sum{expected_response="true",group="",method="GET",name="https://test.k6.io/",proto="HTTP/1.1",scenario="default",status="200",tls_version="tls1.3",url="https://test.k6.io/"} 5755.121490999999
+k6_http_req_waiting_count{expected_response="true",group="",method="GET",name="https://test.k6.io/",proto="HTTP/1.1",scenario="default",status="200",tls_version="tls1.3",url="https://test.k6.io/"} 46
 # HELP k6_http_req_waiting_current Time spent waiting for response (current)
 # TYPE k6_http_req_waiting_current gauge
-k6_http_req_waiting_current{expected_response="true",group="",method="GET",name="http://test.k6.io",proto="HTTP/1.1",scenario="default",status="200",url="http://test.k6.io"} 416.55047
+k6_http_req_waiting_current{expected_response="true",group="",method="GET",name="http://test.k6.io",proto="HTTP/1.1",scenario="default",status="308",tls_version="",url="http://test.k6.io"} 122.23503
+k6_http_req_waiting_current{expected_response="true",group="",method="GET",name="https://test.k6.io/",proto="HTTP/1.1",scenario="default",status="200",tls_version="tls1.3",url="https://test.k6.io/"} 124.564229
 # HELP k6_http_reqs How many HTTP requests has k6 generated, in total
 # TYPE k6_http_reqs counter
-k6_http_reqs{expected_response="true",group="",method="GET",name="http://test.k6.io",proto="HTTP/1.1",scenario="default",status="200",url="http://test.k6.io"} 38
+k6_http_reqs{expected_response="true",group="",method="GET",name="http://test.k6.io",proto="HTTP/1.1",scenario="default",status="308",tls_version="",url="http://test.k6.io"} 46
+k6_http_reqs{expected_response="true",group="",method="GET",name="https://test.k6.io/",proto="HTTP/1.1",scenario="default",status="200",tls_version="tls1.3",url="https://test.k6.io/"} 46
 # HELP k6_iteration_duration The time it took to complete one full iteration
 # TYPE k6_iteration_duration summary
-k6_iteration_duration{group="",scenario="default",quantile="0.5"} 1434.73512
-k6_iteration_duration{group="",scenario="default",quantile="0.9"} 1945.377781
-k6_iteration_duration{group="",scenario="default",quantile="0.95"} 2301.369932
-k6_iteration_duration{group="",scenario="default",quantile="1"} 4293.211801
-k6_iteration_duration_sum{group="",scenario="default"} 60485.744295
-k6_iteration_duration_count{group="",scenario="default"} 38
+k6_iteration_duration{group="",scenario="default",tls_version="",quantile="0.5"} 1248.52603
+k6_iteration_duration{group="",scenario="default",tls_version="",quantile="0.9"} 1249.698125
+k6_iteration_duration{group="",scenario="default",tls_version="",quantile="0.95"} 1370.836179
+k6_iteration_duration{group="",scenario="default",tls_version="",quantile="1"} 1650.467963
+k6_iteration_duration_sum{group="",scenario="default",tls_version=""} 56939.48187700001
+k6_iteration_duration_count{group="",scenario="default",tls_version=""} 45
 # HELP k6_iteration_duration_current The time it took to complete one full iteration (current)
 # TYPE k6_iteration_duration_current gauge
-k6_iteration_duration_current{group="",scenario="default"} 1419.901911
+k6_iteration_duration_current{group="",scenario="default",tls_version=""} 1247.360889
 # HELP k6_iterations The aggregate number of times the VUs in the test have executed
 # TYPE k6_iterations counter
-k6_iterations{group="",scenario="default"} 38
+k6_iterations{group="",scenario="default",tls_version=""} 45
 # HELP k6_vus Current number of active virtual users
 # TYPE k6_vus gauge
-k6_vus 1
+k6_vus{tls_version=""} 1
 # HELP k6_vus_max Max possible number of virtual users
 # TYPE k6_vus_max gauge
-k6_vus_max 1
+k6_vus_max{tls_version=""} 1
 ```
