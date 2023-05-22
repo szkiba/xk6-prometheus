@@ -54,7 +54,7 @@ You can also use pre-built k6 image within a Docker container. In order to do th
 **Linux**
 
 ```plain
-docker run -v $(pwd):/scripts -it --rm ghcr.io/szkiba/xk6-prometheus:latest run -d 1m --out=dashboard /scripts/script.js
+docker run -v $(pwd):/scripts -it --rm ghcr.io/szkiba/xk6-prometheus:latest run -d 1m --out=prometheus /scripts/script.js
 ```
 
 **Windows**
