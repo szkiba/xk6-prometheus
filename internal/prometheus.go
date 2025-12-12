@@ -13,11 +13,12 @@ import (
 
 // PrometheusAdapter is an adapter for Prometheus metrics.
 type PrometheusAdapter struct {
-	Subsystem string
-	Namespace string
-	logger    logrus.FieldLogger
-	metrics   map[string]any
-	registry  *prometheus.Registry
+	Subsystem           string
+	Namespace           string
+	logger              logrus.FieldLogger
+	metrics             map[string]any
+	registry            *prometheus.Registry
+	UseHistogramForTime bool
 }
 
 type labelNames []string
@@ -41,6 +42,10 @@ type histogramWithLabels struct {
 	histogramVec *prometheus.HistogramVec
 	labelNames   labelNames
 }
+
+var (
+	durationBuckets = []float64{0.005, 0.01, 0.025, 0.05, 0.1, 0.25, 0.5, 1, 2.5, 5, 10, 20, 50, 100, 250, 500, 1000, 2500, 5000, 10000}
+)
 
 // NewPrometheusAdapter creates a new PrometheusAdapter instance.
 func NewPrometheusAdapter(registry *prometheus.Registry, logger logrus.FieldLogger, ns, sub string) *PrometheusAdapter {
@@ -145,19 +150,14 @@ func (a *PrometheusAdapter) handleGauge(sample *metrics.Sample) {
 }
 
 func (a *PrometheusAdapter) handleRate(sample *metrics.Sample) {
-	if histogram := a.getHistogram(sample.Metric.Name, "k6 rate", []float64{0}, sample.Tags); histogram != nil {
-		labelValues := a.tagsToLabelValues(histogram.labelNames, sample.Tags)
-
-		metric, err := histogram.histogramVec.GetMetricWithLabelValues(labelValues...)
-		if err != nil {
-			a.logger.Error(err)
-		} else {
-			metric.Observe(sample.Value)
-		}
-	}
+	a.handleHistogram(sample, []float64{0}, "k6 rate")
 }
 
-func (a *PrometheusAdapter) handleTrend(sample *metrics.Sample) {
+func (a *PrometheusAdapter) handleTrendAsHistogram(sample *metrics.Sample) {
+	a.handleHistogram(sample, durationBuckets, "k6 trend")
+}
+
+func (a *PrometheusAdapter) handleTrendAsSummary(sample *metrics.Sample) {
 	if summary := a.getSummary(sample.Metric.Name, "k6 trend", sample.Tags); summary != nil {
 		labelValues := a.tagsToLabelValues(summary.labelNames, sample.Tags)
 
@@ -168,7 +168,9 @@ func (a *PrometheusAdapter) handleTrend(sample *metrics.Sample) {
 			metric.Observe(sample.Value)
 		}
 	}
+}
 
+func (a *PrometheusAdapter) handleTrend(sample *metrics.Sample) {
 	if gauge := a.getGauge(sample.Metric.Name+"_current", "k6 trend (current)", sample.Tags); gauge != nil {
 		labelValues := a.tagsToLabelValues(gauge.labelNames, sample.Tags)
 
@@ -179,6 +181,14 @@ func (a *PrometheusAdapter) handleTrend(sample *metrics.Sample) {
 			metric.Set(sample.Value)
 		}
 	}
+
+	if a.UseHistogramForTime {
+		if sample.Metric.Contains == metrics.Time {
+			a.handleTrendAsHistogram(sample)
+			return
+		}
+	}
+	a.handleTrendAsSummary(sample)
 }
 
 func (a *PrometheusAdapter) getCounter( //nolint:dupl
@@ -334,6 +344,19 @@ func (a *PrometheusAdapter) getHistogram(
 	}
 
 	return histogram
+}
+
+func (a *PrometheusAdapter) handleHistogram(sample *metrics.Sample, durationBucket []float64, helpSuffix string) {
+	if histogram := a.getHistogram(sample.Metric.Name, helpSuffix, durationBucket, sample.Tags); histogram != nil {
+		labelValues := a.tagsToLabelValues(histogram.labelNames, sample.Tags)
+
+		metric, err := histogram.histogramVec.GetMetricWithLabelValues(labelValues...)
+		if err != nil {
+			a.logger.Error(err)
+		} else {
+			metric.Observe(sample.Value)
+		}
+	}
 }
 
 func helpFor(name string, helpSuffix string) string {

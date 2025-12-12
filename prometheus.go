@@ -24,10 +24,11 @@ func init() {
 }
 
 type options struct {
-	Port      int
-	Host      string
-	Subsystem string
-	Namespace string
+	Port                int
+	Host                string
+	Subsystem           string
+	Namespace           string
+	UseHistogramForTime string
 }
 
 // Output is the Prometheus output implementation.
@@ -60,6 +61,10 @@ func (o *Output) Description() string {
 	return fmt.Sprintf("prometheus (%s)", o.addr)
 }
 
+func isOptTrue(s string) bool {
+	return s == "true" || s == "yes"
+}
+
 // Start implements output.Output.
 func (o *Output) Start() error {
 	opts, err := getopts(o.arg)
@@ -70,6 +75,7 @@ func (o *Output) Start() error {
 	o.Namespace = opts.Namespace
 	o.Subsystem = opts.Subsystem
 	o.addr = fmt.Sprintf("%s:%d", opts.Host, opts.Port)
+	o.UseHistogramForTime = isOptTrue(opts.UseHistogramForTime)
 
 	listener, err := new(net.ListenConfig).Listen(context.TODO(), "tcp", o.addr)
 	if err != nil {
@@ -94,10 +100,11 @@ func (o *Output) Stop() error {
 
 func getopts(query string) (*options, error) {
 	opts := &options{
-		Port:      defaultPort,
-		Host:      "",
-		Namespace: "",
-		Subsystem: "",
+		Port:                defaultPort,
+		Host:                "",
+		Namespace:           "",
+		Subsystem:           "",
+		UseHistogramForTime: "no",
 	}
 
 	if query == "" {

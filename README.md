@@ -96,12 +96,13 @@ k6 run -o 'prometheus=param1=value1&param2=value2' script.js
 > [!TIP]
 > Use quotes around the `--out` parameter to escape `&` characters from the shell.
 
-| Parameter   | Description                                                                                   | Default        |
-|-------------|-----------------------------------------------------------------------------------------------|----------------|
-| `namespace` | [Prometheus namespace](https://prometheus.io/docs/practices/naming/) for exported metrics     | `""` (empty)   |
-| `subsystem` | [Prometheus subsystem](https://prometheus.io/docs/practices/naming/) for exported metrics     | `""` (empty)   |
-| `host`      | Hostname or IP address for HTTP endpoint (empty = listen on all interfaces)                   | `""` (all)     |
-| `port`      | TCP port for HTTP endpoint                                                                    | `5656`         |
+| Parameter              | Description                                                                                                                                                                                               | Default               |
+|------------------------|-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|----------------------|
+| `namespace`            | [Prometheus namespace](https://prometheus.io/docs/practices/naming/) for exported metrics                                                                                                                | `""` (empty)         |
+| `subsystem`            | [Prometheus subsystem](https://prometheus.io/docs/practices/naming/) for exported metrics                                                                                                                | `""` (empty)         |
+| `host`                 | Hostname or IP address for HTTP endpoint (empty = listen on all interfaces)                                                                                                                              | `""` (all)           |
+| `port`                 | TCP port for HTTP endpoint                                                                                                                                                                               | `5656`               |
+| `usehistogramfortime`  | If set to `'true'` or `'yes'`, sets the metric type for trends to a [histogram](https://prometheus.io/docs/concepts/metric_types/#histogram) instead of a [summary](https://prometheus.io/docs/concepts/metric_types/#summary) | `"no"` (uses summary) |
 
 > [!TIP]
 > It's recommended to use `k6` as either `namespace` or `subsystem` to prefix metrics with `k6_`.
@@ -173,16 +174,17 @@ export default function () {
 
 The extension exports k6 metrics in Prometheus text format. Metric types are mapped as follows:
 
-| k6 Metric Type | Prometheus Type | Description                                    |
-|----------------|-----------------|------------------------------------------------|
-| Counter        | Counter         | Cumulative metric that only increases          |
-| Gauge          | Gauge           | Metric that can go up or down                  |
-| Rate           | Histogram       | Ratio of non-zero values (exported as 0 or 1)  |
-| Trend          | Summary         | Statistical aggregations with quantiles        |
+| k6 Metric Type | Prometheus Type         | Description                                     |
+|----------------|-------------------------|------------------------------------------------|
+| Counter        | Counter                 | Cumulative metric that only increases         |
+| Gauge          | Gauge                   | Metric that can go up or down                 |
+| Rate           | Histogram               | Ratio of non-zero values (exported as 0 or 1) |
+| Trend          | Summary (or Histogram)  | Statistical aggregations with quantiles       |
 
 ### Metric Labels
 
 All k6 metric tags are preserved as Prometheus labels:
+
 - `scenario` - Test scenario name
 - `group` - Test group name
 - `method` - HTTP method (for HTTP metrics)
