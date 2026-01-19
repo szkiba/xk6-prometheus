@@ -5,7 +5,7 @@ go 1.24.0
 require (
 	github.com/gorilla/schema v1.4.1
 	github.com/prometheus/client_golang v1.23.2
-	github.com/sirupsen/logrus v1.9.3
+	github.com/sirupsen/logrus v1.9.4
 	go.k6.io/k6 v1.4.2
 )
 
